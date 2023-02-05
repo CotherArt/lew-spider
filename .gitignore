@@ -1,0 +1,6 @@
+__pycache__/
+images/
+keys.py
+*.png
+*.exe
+*.json
