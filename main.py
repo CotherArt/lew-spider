@@ -12,15 +12,17 @@ import os
 perfils_file = 'perfiles.json'
 images_path = 'images/'
 PATH = "chromedirver.exe"
+max_images = 10 #cantidad de imagenes que se descargan
+
 
 driver = webdriver.Chrome(PATH)
 driver.implicitly_wait(10)
 
-# download image from url
+# descarga una imagen de internet
 # Descarga una imagen de una cuenta de usuario y la guarda en su propia carpeta
 def download_image(web_url, folder=images_path, img_name=None):  
     # create folder if do not exist
-    os.makedirs(folder)
+    os.makedirs(folder, exist_ok=True)
     
     # genera un nombre aleatorio para la imgaen, cunado no hay parametro img_name
     if img_name == None:
@@ -35,25 +37,27 @@ def download_image(web_url, folder=images_path, img_name=None):
     
     print('+ '+fullname)
 
-#Save the list of accounts to a file
-def save_accounts_dict(accounts):
-    if not len(accounts) == 0:
-        with open("perfiles.json", "w") as fp:
-            json.dump(accounts, fp, indent=4)
+# guarda el registro de las descargas en un archivo
+def save_accounts_dict(accounts:dict, perfils_file=perfils_file):
+    if len(accounts) == 0:
+        return
+    
+    with open(perfils_file, "w") as fp:
+        json.dump(accounts, fp, indent=4)
 
-#Load the accounts from a file
-def load_accounts_dict():
-    accounts_dict = {}
-    if perfils_file in os.listdir():
-        with open("perfiles.json", "r") as fp:
-            accounts_dict = json.load(fp)
-    else:
-        save_accounts_dict(accounts_dict)
+# carga el dicionario de registro de descargas del archivo
+def load_accounts_dict(perfils_file=perfils_file):
+    if not perfils_file in os.listdir():
+        print(f"Error al cargar el registro de descargas, no extiste el archivo {perfils_file}")
+        return
         
-    return accounts_dict
+    with open(perfils_file, "r") as fp:
+        accounts_dict = json.load(fp)
+        
+    return dict(accounts_dict)
 
 # go to account and scrape their images
-def get_images_from(account):
+def get_images_from(account, max_images=max_images):
     driver.get('https://twitter.com/' + account)
 
     # Open carrusel
@@ -66,7 +70,7 @@ def get_images_from(account):
     
     # clic on next
     try:
-        for i in range(30):
+        for i in range(max_images):
             next = driver.find_element(By.XPATH, '//div[@aria-label="Next slide"]')
             sleep(0.4)
             next.click()
@@ -160,11 +164,16 @@ def attack(account:str):
         save_accounts_dict(perfils_dict)
         
 def attack_list(perfils_list:list):
-    print(f'Attacking {account}...')
-    
     for account in perfils_list:
         attack(account)
 
 # RECORDATORIO - Para funciones como esta, que realizan una acción a cada uno
 # de los elementos de esa lista. Crea una función que solo se lo haga a un elemento y 
 # crea otra que reciba la lista y la itere
+
+if __name__ == '__main__':
+    driver.get('https://www.twitter.com')
+    # login_twitter()
+    # cuentas = list(load_accounts_dict().keys())
+    cuentas = ['meowinxi', 'Brananaxx']
+    attack_list(cuentas)
